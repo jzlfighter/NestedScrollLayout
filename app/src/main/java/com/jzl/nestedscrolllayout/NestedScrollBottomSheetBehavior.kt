@@ -80,18 +80,6 @@ internal class NestedScrollBottomSheetBehavior(context: Context, attrs: Attribut
         return super.blocksInteractionBelow(parent, child)
     }
 
-    override fun layoutDependsOn(
-        parent: CoordinatorLayout,
-        child: KeepBottomSheetLayout,
-        dependency: View
-    ): Boolean {
-        if (dependency is AppBarLayout) {
-            mAppBarLayout = dependency
-            return true
-        }
-        return false
-    }
-
     override fun onDependentViewChanged(
         parent: CoordinatorLayout,
         child: KeepBottomSheetLayout,
@@ -132,18 +120,6 @@ internal class NestedScrollBottomSheetBehavior(context: Context, attrs: Attribut
         layoutDirection: Int
     ): Boolean {
         return super.onLayoutChild(parent, child, layoutDirection)
-    }
-
-    override fun onStartNestedScroll(
-        coordinatorLayout: CoordinatorLayout,
-        child: KeepBottomSheetLayout,
-        directTargetChild: View,
-        target: View,
-        axes: Int,
-        type: Int
-    ): Boolean {
-        Log.d(TAG, "onStartNestedScroll: $axes,$type")
-        return true
     }
 
     override fun onNestedScrollAccepted(
@@ -221,6 +197,7 @@ internal class NestedScrollBottomSheetBehavior(context: Context, attrs: Attribut
         velocityY: Float,
         consumed: Boolean
     ): Boolean {
+        Log.d(TAG, "onNestedFling: $velocityY")
         return super.onNestedFling(coordinatorLayout, child, target, velocityX, velocityY, consumed)
     }
 
@@ -231,6 +208,7 @@ internal class NestedScrollBottomSheetBehavior(context: Context, attrs: Attribut
         velocityX: Float,
         velocityY: Float
     ): Boolean {
+        Log.d(TAG, "onNestedPreFling: $velocityY")
         return super.onNestedPreFling(coordinatorLayout, child, target, velocityX, velocityY)
     }
 

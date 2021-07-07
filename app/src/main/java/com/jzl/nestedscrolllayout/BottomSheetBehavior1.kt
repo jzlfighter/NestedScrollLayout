@@ -33,6 +33,7 @@ import com.google.android.material.R
 import com.google.android.material.internal.ViewUtils
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
+import java.lang.RuntimeException
 import java.lang.ref.WeakReference
 import java.util.ArrayList
 import java.util.HashMap
@@ -351,7 +352,7 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
     override fun onInterceptTouchEvent(
         parent: CoordinatorLayout, child: KeepBottomSheetLayout, event: MotionEvent
     ): Boolean {
-        if (!child.isShown || !isDraggable || topAndBottomOffset != 0) {
+        if (!child.isShown || !isDraggable) {
             ignoreEvents = true
             return false
         }
@@ -414,6 +415,7 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
     override fun onTouchEvent(
         parent: CoordinatorLayout, child: KeepBottomSheetLayout, event: MotionEvent
     ): Boolean {
+        Log.d("jzlll", "${event.action},${event.y}")
         if (!child.isShown) {
             return false
         }
@@ -492,6 +494,7 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
                     )
                 }
             }
+            nestedScrolled = true
             return
         }
 
@@ -571,11 +574,26 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
                     0
                 )
         }
+        isDraggable = consumed[1] == 0
         if (dyUnconsumed == 0) {
             // The scrolling view may scroll to the top of its content without updating the actions, so
             // update here.
             updateAccessibilityActions()
         }
+    }
+
+    var appBarLayout: KeepAppBarLayout? = null
+
+    override fun layoutDependsOn(
+        parent: CoordinatorLayout,
+        child: KeepBottomSheetLayout,
+        dependency: View
+    ): Boolean {
+        if (dependency is KeepAppBarLayout) {
+            appBarLayout = dependency
+            return true
+        }
+        return super.layoutDependsOn(parent, child, dependency)
     }
 
     override fun onStopNestedScroll(
@@ -584,7 +602,7 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
         target: View,
         type: Int
     ) {
-        if (child!!.top == getExpandedOffset()) {
+        if (child.top == getExpandedOffset()) {
             setStateInternal(STATE_EXPANDED)
             return
         }
@@ -612,13 +630,16 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
             targetState = STATE_HIDDEN
         } else if (lastNestedScrollDy == 0) {
             val currentTop = child.top
-            if (fitToContents) {
+            if (topAndBottomOffset != 0) {
+                top = currentTop
+                targetState = STATE_COLLAPSED
+            } else if (fitToContents) {
                 if (Math.abs(currentTop - fitToContentsOffset) < Math.abs(currentTop - collapsedOffset)) {
                     top = fitToContentsOffset
                     targetState = STATE_EXPANDED
                 } else {
-                    top = collapsedOffset
                     targetState = STATE_COLLAPSED
+                    top = collapsedOffset
                 }
             } else {
                 if (currentTop < halfExpandedOffset) {
@@ -669,7 +690,8 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
         return if (nestedScrollingChildRef != null) {
             (target === nestedScrollingChildRef!!.get()
                 && (state != STATE_EXPANDED
-                || super.onNestedPreFling(coordinatorLayout, child, target, velocityX, velocityY)))
+                || super.onNestedPreFling(coordinatorLayout, child, target, velocityX, velocityY))
+                && appBarLayout?.getOffset() == 0)
         } else {
             false
         }
@@ -1174,6 +1196,9 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
 
     private val dragCallback: ViewDragHelper.Callback = object: ViewDragHelper.Callback() {
         override fun tryCaptureView(child: View, pointerId: Int): Boolean {
+            if (appBarLayout?.getOffset() != 0) {
+                return false
+            }
             if (state == STATE_DRAGGING) {
                 return false
             }
