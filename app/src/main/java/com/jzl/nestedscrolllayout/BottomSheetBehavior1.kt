@@ -29,11 +29,11 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.Accessibilit
 import androidx.core.view.accessibility.AccessibilityViewCommand
 import androidx.customview.view.AbsSavedState
 import androidx.customview.widget.ViewDragHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.R
 import com.google.android.material.internal.ViewUtils
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
-import java.lang.RuntimeException
 import java.lang.ref.WeakReference
 import java.util.ArrayList
 import java.util.HashMap
@@ -349,6 +349,7 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
         return true
     }
 
+    //fixme 关联scrollView 向下fling时，bottomSheet 一段时间内无法上拉
     override fun onInterceptTouchEvent(
         parent: CoordinatorLayout, child: KeepBottomSheetLayout, event: MotionEvent
     ): Boolean {
@@ -415,7 +416,6 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
     override fun onTouchEvent(
         parent: CoordinatorLayout, child: KeepBottomSheetLayout, event: MotionEvent
     ): Boolean {
-        Log.d("jzlll", "${event.action},${event.y}")
         if (!child.isShown) {
             return false
         }
@@ -552,7 +552,7 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
         type: Int,
         consumed: IntArray
     ) {
-        if (dyUnconsumed > 0) {
+        if (dyUnconsumed > 0 && target !is RecyclerView) {
             // If the scrolling view is scrolling down but not consuming, it's probably be at
             // the bottom of it's content
             consumed[1] =
@@ -563,7 +563,7 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
                     -child.getUpNestedScrollRange() + peekHeight,
                     0
                 )
-        } else {
+        } else if (dyUnconsumed < 0 && type == ViewCompat.TYPE_TOUCH) {
             // 吸顶状态下来列表到头
             consumed[1] =
                 scroll(
@@ -574,7 +574,6 @@ internal open class BottomSheetBehavior1: BottomBehavior<KeepBottomSheetLayout> 
                     0
                 )
         }
-        isDraggable = consumed[1] == 0
         if (dyUnconsumed == 0) {
             // The scrolling view may scroll to the top of its content without updating the actions, so
             // update here.

@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
 
@@ -58,15 +59,10 @@ class BaseHeaderBehavior(context: Context?, attrs: AttributeSet?):
         if (DEBUG_SCROLL_EVENT) {
             Log.d(TAG, "onNestedPreScroll: $dy,${consumed[1]},$type")
         }
-        if (dy < 0) {
-            //We're scrolling down
-            if (topAndBottomOffset < 0) {
-                scroll(coordinatorLayout, child, dy, -child.getDownNestedPreScrollRange(), 0)
-            }
-        } else {
-            if (topAndBottomOffset < 0) {
-                scroll(coordinatorLayout, child, dy, -child.getDownNestedPreScrollRange(), 0)
-            }
+        if (abs(topAndBottomOffset) > 0 &&
+            abs(topAndBottomOffset) < child.getDownNestedPreScrollRange()
+        ) {
+            scroll(coordinatorLayout, child, dy, -child.getDownNestedPreScrollRange(), 0)
         }
     }
 
@@ -84,7 +80,7 @@ class BaseHeaderBehavior(context: Context?, attrs: AttributeSet?):
         if (DEBUG_SCROLL_EVENT) {
             Log.d(TAG, "onNestedScroll: $dyConsumed,$dyUnconsumed")
         }
-        if (dyUnconsumed < 0) {
+        if (dyUnconsumed < 0 && type == ViewCompat.TYPE_TOUCH) {
             // If the scrolling view is scrolling up but not consuming, it's probably be at
             // the bottom of it's content
             consumed[1] = scroll(
@@ -95,7 +91,7 @@ class BaseHeaderBehavior(context: Context?, attrs: AttributeSet?):
                 0
             )
         } else {
-            if (topAndBottomOffset == 0) {
+            if (topAndBottomOffset == 0 && target !is RecyclerView) {
                 consumed[1] = scroll(
                     coordinatorLayout,
                     child,

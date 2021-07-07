@@ -50,15 +50,27 @@
         android:layout_height="wrap_content"
         app:layout_behavior=".NestedScrollBottomSheetBehavior">
 
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="title"
+            android:gravity="center"
+            android:textSize="30sp"
+            android:background="@color/purple_200"/>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:itemCount="5"
-            tools:listitem="@layout/item_list"/>
+            tools:listitem="@layout/item_list"
+            android:overScrollMode="never"/>
 
     </com.jzl.nestedscrolllayout.KeepBottomSheetLayout>
 
